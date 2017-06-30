@@ -9,6 +9,7 @@ package com.cx.coolweather.activity;
  *  @描述：    TODO
  */
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -30,6 +31,7 @@ import com.bumptech.glide.Glide;
 import com.cx.coolweather.R;
 import com.cx.coolweather.gson.Forecast;
 import com.cx.coolweather.gson.Weather;
+import com.cx.coolweather.service.AutoUpdateService;
 import com.cx.coolweather.util.HttpUtil;
 import com.cx.coolweather.util.ToastHelper;
 import com.cx.coolweather.util.Utility;
@@ -112,7 +114,7 @@ public class WeatherActivity
             //有缓存时，直接解析缓存数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
             mWeatherId = weather.basic.weatherId;
-            showWrsyhrtInfo(weather);
+            showWeatherInfo(weather);
         } else {
             //无缓存时去服务器查询天气
             mWeatherId = getIntent().getStringExtra("weather_id");
@@ -211,7 +213,9 @@ public class WeatherActivity
                                                                              .edit();
                             edit.putString("weather", responseText);
                             edit.apply();
-                            showWrsyhrtInfo(weather);
+                            Intent intent = new Intent(WeatherActivity.this, AutoUpdateService.class);
+                            startService(intent);
+                            showWeatherInfo(weather);
                         } else {
                             ToastHelper.show(WeatherActivity.this, "获取天气信息失败");
                         }
@@ -227,7 +231,8 @@ public class WeatherActivity
      * 处理并展示 Weather 实体类中的数据
      * @param weather
      */
-    private void showWrsyhrtInfo(Weather weather) {
+    private void showWeatherInfo(Weather weather) {
+
         String cityName    = weather.basic.cityName;
         String updateTime  = weather.basic.update.updateTimeLocal.split(" ")[1];
         String degree      = weather.now.temperature + "℃";
