@@ -24,6 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.cx.coolweather.MainActivity;
 import com.cx.coolweather.R;
 import com.cx.coolweather.activity.WeatherActivity;
 import com.cx.coolweather.db.City;
@@ -67,7 +68,8 @@ public class ChooseAreaFragment
     private List<City>           cityList;
     //县列表
     private List<County>         countyList;
-    private ProgressDialog progressDialog;
+    private ProgressDialog       progressDialog;
+    private String mWeatherId;
 
     @Override
     public void onAttach(Context context) {
@@ -108,13 +110,21 @@ public class ChooseAreaFragment
                 } else if (currentlevenLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
                     queryCounties();
-                }else if (currentlevenLevel==LEVEL_COUNTY){
-                    String weatherId = countyList.get(position)
-                                                 .getWeatherId();
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("weather_id",weatherId);
-                    startActivity(intent);
-                    getActivity().finish();
+                } else if (currentlevenLevel == LEVEL_COUNTY) {
+                    mWeatherId = countyList.get(position)
+                                           .getWeatherId();
+                    if (getActivity() instanceof MainActivity) {
+
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("weather_id", mWeatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }else if (getActivity() instanceof WeatherActivity){
+                        WeatherActivity activity = (WeatherActivity) getActivity();
+                        activity.mDrawerLayout.closeDrawers();
+                        activity.mSwipeRefresh.setRefreshing(true);
+                        activity.requestWeather(mWeatherId);
+                    }
                 }
             }
         });
@@ -197,7 +207,7 @@ public class ChooseAreaFragment
         } else {
             int    provinceCode = selectedProvince.getProvinceCode();
             int    cityCode     = selectedCity.getCityCode();
-            String address      = "http://guolin.tech/api/china/" + provinceCode +"/"+ cityCode;
+            String address      = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
             queryFromServer(address, "county");
         }
     }
@@ -262,7 +272,7 @@ public class ChooseAreaFragment
      * 关闭进度对话框
      */
     private void closeProgressDialog() {
-        if (progressDialog!=null){
+        if (progressDialog != null) {
             progressDialog.dismiss();
         }
     }
@@ -270,7 +280,7 @@ public class ChooseAreaFragment
     /**
      * 显示进度对话框
      */
-    private void showProgressDialog(){
+    private void showProgressDialog() {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getActivity());
             progressDialog.setMessage("正在加载...");
